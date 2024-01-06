@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "591902728271",
+    "project_id": "oppurtulink-techno",
+    "storage_bucket": "oppurtulink-techno.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:591902728271:android:0384b1fe80873fea748a3a",
+        "android_client_info": {
+          "package_name": "com.oppurtulink.techno"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "591902728271-bb0ni52kmljv7u61vgj108d39lgvddu4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.oppurtulink.techno",
+            "certificate_hash": "2e9ecf33e450a4a9e342453b2ded8410f4239a66"
+          }
+        },
+        {
+          "client_id": "591902728271-rqt89i6ejgb1aburuk2unaklsts899t5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD53jQan-sjV_FSbL89b_gTypQ9Kg1kleg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "591902728271-rqt89i6ejgb1aburuk2unaklsts899t5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "591902728271-0h1pg31job9e5sphqvd6k9g6kiq116fj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.oppurtulink"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
