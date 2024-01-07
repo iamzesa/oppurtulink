@@ -21,7 +21,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  String? selectedRole;
   late AuthService authService;
   // text editing controllers
   final emailController = TextEditingController();

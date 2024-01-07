@@ -123,42 +123,4 @@ class AuthService {
       // Handle the error accordingly
     }
   }
-
-  Future<bool> doesUserExistForRole(String role, String email) async {
-    try {
-      final DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection(role).doc(email).get();
-      return userDoc.exists;
-    } catch (e) {
-      print('Error checking user existence: $e');
-      return false;
-    }
-  }
-
-  Future<bool> doesUserExistInAuth(String email) async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      return user?.email == email;
-    } catch (e) {
-      print('Error checking user existence in Firebase Authentication: $e');
-      return false;
-    }
-  }
-}
-
-Future<bool> doesUserExistInRoleCollection(String role, String email) async {
-  try {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user?.email != email) {
-      return false;
-    }
-
-    DocumentSnapshot userDoc =
-        await FirebaseFirestore.instance.collection(role).doc(email).get();
-
-    return userDoc.exists;
-  } catch (e) {
-    print('Error checking user existence in Firebase and Firestore: $e');
-    return false;
-  }
 }
