@@ -2,9 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-void signUserOut() {
-  FirebaseAuth.instance.signOut();
-}
+import 'auth_page.dart';
 
 class JobSeekerHomePage extends StatefulWidget {
   const JobSeekerHomePage({super.key});
@@ -16,6 +14,13 @@ class JobSeekerHomePage extends StatefulWidget {
 class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
   List<String> jobSeekerSkills = [];
   String welcomeMessage = '';
+
+  void signUserOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => AuthPage()),
+    );
+  }
 
   @override
   void initState() {
@@ -70,9 +75,9 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: const [
+        actions: [
           IconButton(
-            onPressed: signUserOut,
+            onPressed: () => signUserOut(context),
             icon: Icon(Icons.logout),
           )
         ],

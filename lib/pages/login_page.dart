@@ -11,10 +11,9 @@ import '../user_role.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
-  final Function()? onTap;
   final String? userId;
 
-  const LoginPage({super.key, this.userId, required this.onTap});
+  const LoginPage({super.key, this.userId});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -25,6 +24,8 @@ class _LoginPageState extends State<LoginPage> {
   // text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  bool areTermsAccepted = false;
 
   // sign user in method
   void signUserIn() async {
@@ -152,6 +153,46 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Future<String?> fetchTermsAndConditions() async {
+    try {
+      DocumentSnapshot termsSnapshot = await FirebaseFirestore.instance
+          .collection('terms_and_conditions')
+          .doc('terms')
+          .get();
+
+      String? termsText = termsSnapshot['text'];
+      return termsText;
+    } catch (e) {
+      print('Error fetching terms and conditions: $e');
+      return null;
+    }
+  }
+
+  void _showTermsAndConditionsDialog() {
+    fetchTermsAndConditions().then((termsText) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Terms and Conditions'),
+            content: SingleChildScrollView(
+              child: Text(
+                termsText ?? 'Failed to retrieve terms.',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,8 +272,6 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: true,
                 ),
 
-                const SizedBox(height: 10),
-
                 // forgot password?
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -250,15 +289,41 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: 1),
 
                 // sign in button
                 MyButton(
-                  onTap: signUserIn,
+                  onTap: areTermsAccepted ? signUserIn : null,
                   buttonText: "Log in",
                 ),
 
                 const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                      value: areTermsAccepted,
+                      onChanged: (value) {
+                        setState(() {
+                          areTermsAccepted = value ?? false;
+                        });
+                      },
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _showTermsAndConditionsDialog();
+                      },
+                      child: Text(
+                        'I agree to the terms and conditions',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
 
                 // or continue with
                 Padding(
@@ -296,35 +361,37 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     // Google button
                     SquareTile(
-                      onTap: () async {
-                        final authService =
-                            AuthService(); // Create an instance of AuthService
-                        final userRole =
-                            Provider.of<UserRole>(context, listen: false).role;
+                      onTap: areTermsAccepted
+                          ? () {
+                              final authService = AuthService();
+                              final role =
+                                  Provider.of<UserRole>(context, listen: false)
+                                      .role;
 
-                        if (userRole == null || userRole.isEmpty) {
-                          // Show an error dialog if the role is not selected
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('Role Not Selected'),
-                                content: const Text(
-                                  'Please select a role (jobseeker or employer) before signing in with Google.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        } else {
-                          authService.signInWithGoogle(userRole);
-                        }
-                      },
+                              if (role != null) {
+                                authService.signInWithGoogle(role);
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Role Not Selected'),
+                                      content: const Text(
+                                        'Please select a role (jobseeker or employer) before signing up with Google.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            }
+                          : null,
                       imagePath: 'lib/images/google.png',
                     ),
                   ],
@@ -342,7 +409,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
-                      onTap: widget.onTap,
+                      onTap: () {
+                        Navigator.pushNamed(context, '/signup');
+                      },
                       child: const Text(
                         'Sign Up',
                         style: TextStyle(

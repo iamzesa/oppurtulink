@@ -2,21 +2,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../components/my_button.dart';
-
-void signUserOut() {
-  FirebaseAuth.instance.signOut();
-}
+import 'auth_page.dart';
 
 class EmployerHomePage extends StatelessWidget {
   const EmployerHomePage({Key? key}) : super(key: key);
+
+  void signUserOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => AuthPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: const [
+        actions: [
           IconButton(
-            onPressed: signUserOut,
+            onPressed: () {
+              signUserOut(
+                  context); // Call signUserOut when IconButton is pressed
+            },
             icon: Icon(Icons.logout),
           )
         ],
