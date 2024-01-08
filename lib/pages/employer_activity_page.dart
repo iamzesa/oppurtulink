@@ -75,7 +75,9 @@ class EmployerActivityPage extends StatelessWidget {
                           title: Text(
                             job['jobTitle'],
                             style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           subtitle:
                               Text('${job['companyName']} - $daysAgo days ago'),
@@ -88,6 +90,27 @@ class EmployerActivityPage extends StatelessWidget {
                               ),
                             );
                           },
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              FirebaseFirestore.instance
+                                  .collection('jobs')
+                                  .doc(job.id)
+                                  .delete()
+                                  .then((_) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Job deleted')),
+                                );
+                              }).catchError((error) {
+                                // Handle errors if deletion fails
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Failed to delete job')),
+                                );
+                                print("Failed to delete job: $error");
+                              });
+                            },
+                          ),
                         ),
                       ),
                     );

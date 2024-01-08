@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import 'applicant_details.dart';
+import 'edit_job.dart';
 
 class ApplicantListPage extends StatelessWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> job;
@@ -23,17 +24,61 @@ class ApplicantListPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(
+                    '${job['jobTitle']}',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditJobDetailsPage(job: job),
+                      ),
+                    );
+                  },
+                  child: Text('Edit Details'),
+                ),
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                '${job['jobTitle']}',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                'Company Name: ${job['companyName']}',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                'Employer: ${job['employer']}',
+                style: TextStyle(fontSize: 16),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
                 'Details: ${job['jobDetails']}',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                'SkillS Needed: ${job['jobSkills'].join(', ')}',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                'Requirements: ${job['requirements'].join(', ')}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
