@@ -36,6 +36,8 @@ class MyApp extends StatelessWidget {
           style: ButtonStyle(
             backgroundColor:
                 MaterialStateProperty.all<Color>(Color(0xFF061cb0)),
+            foregroundColor: MaterialStateProperty.all<Color>(
+                Colors.white), // Text color set to white
           ),
         ),
       ),
