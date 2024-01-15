@@ -58,7 +58,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       return skillsList;
     } catch (error) {
       print('Error fetching skills: $error');
-      return []; // Return an empty list or handle the error according to your app's logic
+      return [];
     }
   }
 

@@ -44,6 +44,14 @@ class _ApplicantDetailsPageState extends State<ApplicantDetailsPage> {
               'Email: ${widget.applicantData['profileData']['email']}',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            Text(
+              'Birthday: ${widget.applicantData['profileData']['birthday']}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Birthday: ${widget.applicantData['profileData']['age']}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 16),
             Text(
               'Applied On: ${widget.applicantData['submittedAt'].toDate()}',

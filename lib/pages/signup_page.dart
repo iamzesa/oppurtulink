@@ -63,7 +63,7 @@ class _SignupPageState extends State<SignupPage> {
             'lastName': lastNameController.text,
             'companyName': companyNameController.text,
             'position': positionController.text,
-            'profileCompleted': profileCompleted,
+            'aboutCompany': 'To be added',
           });
 
           //save to jobseeker
@@ -76,7 +76,6 @@ class _SignupPageState extends State<SignupPage> {
             'firstName': firstNameController.text,
             'lastName': lastNameController.text,
             'profileCompleted': profileCompleted,
-            // Other jobseeker-specific fields can be added here
           });
         }
 

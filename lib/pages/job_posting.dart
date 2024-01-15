@@ -9,8 +9,11 @@ class PostJobPage extends StatefulWidget {
 
 class _PostJobPageState extends State<PostJobPage> {
   late User loggedInUser;
+  String companyName = '';
+
   final TextEditingController _jobDetailsController = TextEditingController();
   final TextEditingController _jobTitleController = TextEditingController();
+  final TextEditingController _salaryController = TextEditingController();
   final List<String> _jobSkills = [];
   final List<String> _requirements = [];
 
@@ -22,6 +25,23 @@ class _PostJobPageState extends State<PostJobPage> {
 
   void fetchLoggedInUser() {
     loggedInUser = FirebaseAuth.instance.currentUser!;
+
+    FirebaseFirestore.instance
+        .collection('employer')
+        .doc(loggedInUser.email)
+        .get()
+        .then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        setState(() {
+          companyName = documentSnapshot['companyName'];
+        });
+      } else {
+        print(
+            'Document does not exist on Firestore for email: ${loggedInUser.email}');
+      }
+    }).catchError((error) {
+      print('Error retrieving data from Firestore: $error');
+    });
   }
 
   @override
@@ -35,29 +55,35 @@ class _PostJobPageState extends State<PostJobPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-                'Company Name: ABC Company'), // Assuming fetched from employer collection
-            SizedBox(height: 20.0),
+            Text('Company Name: $companyName'),
+            SizedBox(height: 10.0),
             Text('Employer Email: ${loggedInUser.email}'),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10.0),
             TextFormField(
               controller: _jobTitleController,
               decoration: InputDecoration(
                 labelText: 'Job Title',
               ),
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 0.0),
+            TextFormField(
+              controller: _salaryController,
+              decoration: InputDecoration(
+                labelText: 'Salary',
+              ),
+            ),
+            SizedBox(height: 10.0),
             TextFormField(
               controller: _jobDetailsController,
               decoration: InputDecoration(
                 labelText: 'Job Details',
               ),
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10.0),
             _buildSkillsInput(),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10.0),
             _buildRequirementsInput(),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10.0),
             ElevatedButton(
               onPressed: () {
                 _postJob(context);
@@ -119,10 +145,8 @@ class _PostJobPageState extends State<PostJobPage> {
               onPressed: () {
                 setState(() {
                   if (!_jobSkills.contains(newSkill)) {
-                    _jobSkills.add(
-                        newSkill); // Add skill to the list if not already present
+                    _jobSkills.add(newSkill);
                   } else {
-                    // Skill already exists in _jobSkills, you can show a message here if needed
                     print('Skill $newSkill already exists in _jobSkills');
                   }
                 });
@@ -228,17 +252,15 @@ class _PostJobPageState extends State<PostJobPage> {
   }
 
   void _postJob(BuildContext context) {
-    // Logic to post job to Firestore
-    String companyName = 'ABC Company';
+    String salary = _salaryController.text;
     String jobTitle = _jobTitleController.text;
     String jobDetails = _jobDetailsController.text;
-    Timestamp postedDate = Timestamp.now(); // Automatically generated timestamp
-
-    // Construct job object to save in Firestore
+    Timestamp postedDate = Timestamp.now();
     Map<String, dynamic> jobData = {
       'companyName': companyName,
       'employer': loggedInUser.email,
       'jobTitle': jobTitle,
+      'salary': salary,
       'jobDetails': jobDetails,
       'postedDate': postedDate,
       'jobSkills': _jobSkills,
@@ -274,6 +296,7 @@ class _PostJobPageState extends State<PostJobPage> {
     _jobDetailsController.clear();
     _jobSkills.clear();
     _requirements.clear();
+    _salaryController.clear();
 
     setState(() {}); // Refresh the UI after clearing the fields
   }
