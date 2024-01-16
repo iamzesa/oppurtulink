@@ -18,7 +18,6 @@ class _ApplicantDetailsPageState extends State<ApplicantDetailsPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize status with the applicant's current status
     _status = widget.applicantData['status'];
     _statusController.text = _status;
   }
@@ -31,114 +30,153 @@ class _ApplicantDetailsPageState extends State<ApplicantDetailsPage> {
       appBar: AppBar(
         title: Text('Applicant Details'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Text(
-              'Applicant Name: ${widget.applicantData['profileData']['firstName']} ${widget.applicantData['profileData']['lastName']}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Email: ${widget.applicantData['profileData']['email']}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Birthday: ${widget.applicantData['profileData']['birthday']}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Birthday: ${widget.applicantData['profileData']['age']}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Applied On: ${widget.applicantData['submittedAt'].toDate()}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Work Experiences:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.applicantData['profileData']['workExperiences']
-                  .map<Widget>((experience) {
-                return Text(
-                  '- ${experience['duration']} at ${experience['company']}, ${experience['position']}',
-                  style: TextStyle(fontSize: 14),
-                );
-              }).toList(),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Skills:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Wrap(
-              children: widget.applicantData['profileData']['skills']
-                  .map<Widget>((skill) {
-                return Chip(
-                  label: Text(skill),
-                );
-              }).toList(),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Educational Attainment:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.applicantData['profileData']
-                      ['educationalAttainments']
-                  .map<Widget>((education) {
-                return Text(
-                  '- ${education['level']} at ${education['school']}',
-                  style: TextStyle(fontSize: 14),
-                );
-              }).toList(),
-            ),
-            TextFormField(
-              controller: _statusController,
-              decoration: InputDecoration(
-                labelText: 'Status',
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                _updateStatus();
-              },
-              child: Text('Update Status'),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                if (widget.applicantData['profileData'] != null) ...[
+                  Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundImage: NetworkImage(
+                          widget.applicantData['profileData']['profileImage'] ??
+                              'https://pixabay.com/get/gca1fbef539eb537ed9c9a3076bd45d09b02c90faf2f70d71a67c2c55e17aa0d12134af0f5023c6889705a19c7c32c26c_1280.png',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Text(
+                        'Name: ${widget.applicantData['profileData']['firstName']} ${widget.applicantData['profileData']['lastName']}',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Email: ${widget.applicantData['profileData']['email']}',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Age: ${widget.applicantData['profileData']['age'] ?? 'N/A'}',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Birthday: ${widget.applicantData['profileData']['birthday'] ?? 'N/A'}',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Applied On: ${widget.applicantData['submittedAt']?.toDate() ?? 'N/A'}',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Work Experiences:',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Column(
+                        children: widget.applicantData['profileData']
+                                    ['workExperiences'] !=
+                                null
+                            ? widget.applicantData['profileData']
+                                    ['workExperiences']
+                                .map<Column>((experience) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '- ${experience['duration']} at ${experience['company']}, ${experience['position']}',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                );
+                              }).toList()
+                            : [
+                                Column(children: [Text('No work experiences')])
+                              ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Skills:',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Wrap(
+                        children: widget.applicantData['profileData']
+                                    ['skills'] !=
+                                null
+                            ? widget.applicantData['profileData']['skills']
+                                .map<Widget>((skill) {
+                                return Chip(
+                                  label: Text(skill),
+                                );
+                              }).toList()
+                            : [Text('No skills')],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Educational Attainment:',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: widget.applicantData['profileData']
+                                    ['educationalAttainments'] !=
+                                null
+                            ? widget.applicantData['profileData']
+                                    ['educationalAttainments']
+                                .map<Column>((education) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '- ${education['level']} at ${education['school']}',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                );
+                              }).toList()
+                            : [
+                                Column(children: [
+                                  Text('No educational attainments')
+                                ])
+                              ],
+                      ),
+                      TextFormField(
+                        controller: _statusController,
+                        decoration: InputDecoration(
+                          labelText: 'Status',
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          _updateStatus();
+                        },
+                        child: Text('Update Status'),
+                      ),
+                    ],
+                  )
+                ]
+              ]),
             ),
           ],
         ),
       ),
     );
-  }
-
-  List<Widget> buildProfileData(Map<String, dynamic> profileData) {
-    List<Widget> profileWidgets = [];
-
-    profileWidgets.add(
-      Text(
-        'Profile Data:',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-
-    profileData.forEach((key, value) {
-      profileWidgets.add(
-        Text(
-          '$key: $value',
-          style: TextStyle(fontSize: 16),
-        ),
-      );
-    });
-
-    return profileWidgets;
   }
 
   void _updateStatus() {

@@ -26,6 +26,7 @@ class _SignupPageState extends State<SignupPage> {
   final confirmPasswordController = TextEditingController();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  final contactNumberController = TextEditingController();
   final companyNameController = TextEditingController();
   final positionController = TextEditingController();
 
@@ -62,8 +63,10 @@ class _SignupPageState extends State<SignupPage> {
             'firstName': firstNameController.text,
             'lastName': lastNameController.text,
             'companyName': companyNameController.text,
+            'contactNumber': contactNumberController.text,
             'position': positionController.text,
-            'aboutCompany': 'To be added',
+            'profileCompleted': profileCompleted,
+            'aboutCompany': '',
           });
 
           //save to jobseeker
@@ -84,7 +87,6 @@ class _SignupPageState extends State<SignupPage> {
         showSuccessMessage(
             'Account created successfully! You are automatically logged in!');
 
-        // Delay the navigation for a smoother transition
         Future.delayed(const Duration(seconds: 2), () {
           resetTextFields();
           Navigator.pop(context);
@@ -106,6 +108,7 @@ class _SignupPageState extends State<SignupPage> {
     firstNameController.clear();
     lastNameController.clear();
     companyNameController.clear();
+    contactNumberController.clear();
   }
 
   void showSuccessMessage(String message) {
@@ -264,6 +267,12 @@ class _SignupPageState extends State<SignupPage> {
                   Column(
                     children: [
                       MyTextField(
+                        controller: contactNumberController,
+                        hintText: 'Contact Number',
+                        obscureText: false,
+                      ),
+                      const SizedBox(height: 10),
+                      MyTextField(
                         controller: companyNameController,
                         hintText: 'Company Name',
                         obscureText: false,
@@ -274,10 +283,9 @@ class _SignupPageState extends State<SignupPage> {
                         hintText: 'Position',
                         obscureText: false,
                       ),
+                      const SizedBox(height: 10),
                     ],
                   ),
-
-                const SizedBox(height: 10),
 
                 // email textfield
                 MyTextField(
@@ -370,52 +378,52 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 20),
 
                 // google sign up buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Google button for sign-up
-                    SquareTile(
-                      onTap: areTermsAccepted
-                          ? () async {
-                              final authService =
-                                  AuthService(); // Create an instance of AuthService
-                              final role =
-                                  Provider.of<UserRole>(context, listen: false)
-                                      .role;
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     // Google button for sign-up
+                //     SquareTile(
+                //       onTap: areTermsAccepted
+                //           ? () async {
+                //               final authService =
+                //                   AuthService(); // Create an instance of AuthService
+                //               final role =
+                //                   Provider.of<UserRole>(context, listen: false)
+                //                       .role;
 
-                              if (role == null || role.isEmpty) {
-                                // Show an error dialog if the role is not selected
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('Role Not Selected'),
-                                      content: const Text(
-                                        'Please select a role (jobseeker or employer) before signing up with Google.',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else {
-                                print('Role from SquareTile 04/04 $role');
-                                authService.signUpWithGoogle(role);
-                              }
-                            }
-                          : null,
-                      imagePath: 'lib/images/google.png',
-                    ),
-                    SizedBox(height: 20)
-                  ],
-                ),
+                //               if (role == null || role.isEmpty) {
+                //                 // Show an error dialog if the role is not selected
+                //                 showDialog(
+                //                   context: context,
+                //                   builder: (context) {
+                //                     return AlertDialog(
+                //                       title: const Text('Role Not Selected'),
+                //                       content: const Text(
+                //                         'Please select a role (jobseeker or employer) before signing up with Google.',
+                //                       ),
+                //                       actions: [
+                //                         TextButton(
+                //                           onPressed: () =>
+                //                               Navigator.pop(context),
+                //                           child: const Text('OK'),
+                //                         ),
+                //                       ],
+                //                     );
+                //                   },
+                //                 );
+                //               } else {
+                //                 print('Role from SquareTile 04/04 $role');
+                //                 authService.signUpWithGoogle(role);
+                //               }
+                //             }
+                //           : null,
+                //       imagePath: 'lib/images/google.png',
+                //     ),
+                //     SizedBox(height: 20)
+                //   ],
+                // ),
 
-                //
+                SizedBox(height: 20)
               ],
             ),
           ),

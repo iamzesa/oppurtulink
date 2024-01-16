@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:oppurtulink/pages/edit_employer_profile.dart';
 
-class EmployerProfilePage extends StatefulWidget {
-  const EmployerProfilePage({Key? key}) : super(key: key);
+class EmployerDetailsPage extends StatefulWidget {
+  final String employerEmail;
+
+  const EmployerDetailsPage({Key? key, required this.employerEmail})
+      : super(key: key);
 
   @override
-  State<EmployerProfilePage> createState() => _EmployerProfilePageState();
+  State<EmployerDetailsPage> createState() => _EmployerDetailsPageState();
 }
 
-class _EmployerProfilePageState extends State<EmployerProfilePage> {
+class _EmployerDetailsPageState extends State<EmployerDetailsPage> {
   @override
   Widget build(BuildContext context) {
-    final String? userEmail = FirebaseAuth.instance.currentUser?.email;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text('Employer Details'),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('employer')
-            .doc(userEmail)
+            .doc(widget.employerEmail)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -128,24 +127,6 @@ class _EmployerProfilePageState extends State<EmployerProfilePage> {
                     aboutCompanyText,
                     style: TextStyle(fontSize: 18),
                   ),
-                ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditProfilePage(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    ),
-                  ),
-                  child: Text('Edit Profile'),
                 ),
               ],
             ),

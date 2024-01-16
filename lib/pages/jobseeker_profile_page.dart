@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:multi_select_flutter/multi_select_flutter.dart';
-import 'skills_input.dart'; // Import the newly created file
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class JobSeekerProfilePage extends StatefulWidget {
   const JobSeekerProfilePage({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   late TextEditingController _emailController;
   late TextEditingController _ageController;
   late TextEditingController _birthdayController;
+  late TextEditingController _addressController;
 
   List<Widget> workExperienceWidgets = [];
   List<Widget> educationalAttainmentWidgets = [];
@@ -29,6 +31,10 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   List<String>? skillsFromFirestore;
   List<String> filteredSkills = [];
 
+  String? profileImageUrl;
+
+  File? _imageFile;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +43,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
     _emailController = TextEditingController();
     _ageController = TextEditingController();
     _birthdayController = TextEditingController();
+    _addressController = TextEditingController();
 
     fetchUserProfile();
   }
@@ -45,9 +52,17 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
     try {
       QuerySnapshot skillsSnapshot =
           await FirebaseFirestore.instance.collection('skills').get();
-      List<String> skillsList = skillsSnapshot.docs
-          .map((doc) => doc['skill_name'] as String)
-          .toList();
+
+      List<String> skillsList = [];
+
+      for (var doc in skillsSnapshot.docs) {
+        // Check if the 'skill_name' field exists in the document
+        var data = doc.data() as Map<String, dynamic>?;
+
+        if (data != null && data['skill_name'] != null) {
+          skillsList.add(data['skill_name'] as String);
+        }
+      }
 
       // Print the details of retrieved skills
       print('Retrieved skills:');
@@ -58,7 +73,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       return skillsList;
     } catch (error) {
       print('Error fetching skills: $error');
-      return [];
+      return []; // Return an empty list or handle the error according to your app's logic
     }
   }
 
@@ -84,6 +99,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
           _birthdayController.text = userProfile['birthday'] != null
               ? userProfile['birthday'].toString()
               : '';
+          _addressController.text = userProfile['address'] ?? '';
 
           List<dynamic> skills = userProfile['skills'] ?? [];
           selectedSkills =
@@ -144,6 +160,8 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
               ],
             );
           }).toList();
+
+          profileImageUrl = userProfile['profileImage'] ?? '';
         } else {
           // Set default values if the profile doesn't exist
           _firstNameController.text = '';
@@ -151,9 +169,11 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
           _emailController.text = '';
           _ageController.text = '';
           _birthdayController.text = '';
+          _addressController.text = '';
           selectedSkills = [];
           workExperienceWidgets = [];
           educationalAttainmentWidgets = [];
+          profileImageUrl = '';
         }
       });
     }
@@ -234,16 +254,49 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   bool checkProfileCompletion() {
     return _firstNameController.text.isNotEmpty &&
         _lastNameController.text.isNotEmpty &&
-        _emailController.text.isNotEmpty;
-    // Add more validation checks as needed for other fields
-    // ...
+        _emailController.text.isNotEmpty &&
+        _birthdayController.text.isNotEmpty &&
+        _ageController.text.isNotEmpty &&
+        _addressController.text.isNotEmpty;
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Image picked successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<String?> _uploadImageToFirebase(String uid) async {
+    try {
+      final storageRef =
+          FirebaseStorage.instance.ref().child('profile_images/$uid.jpg');
+      await storageRef.putFile(_imageFile!);
+      final downloadURL = await storageRef.getDownloadURL();
+      return downloadURL;
+    } catch (e) {
+      print('Error uploading profile image: $e');
+      return null;
+    }
   }
 
   Future<void> updateProfile() async {
     String userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+
     if (userEmail.isNotEmpty) {
-      // Fetch existing data before updating
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('jobseeker')
           .doc(userEmail)
@@ -251,14 +304,20 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
 
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-      // Update basic profile details
       userData['firstName'] = _firstNameController.text;
       userData['lastName'] = _lastNameController.text;
       userData['email'] = _emailController.text;
       userData['age'] = int.tryParse(_ageController.text) ?? 0;
       userData['birthday'] = _birthdayController.text;
-
       userData['skills'] = selectedSkills;
+      userData['address'] = _addressController.text;
+
+      if (_imageFile != null) {
+        final downloadUrl = await _uploadImageToFirebase(uid);
+        if (downloadUrl != null) {
+          userData['profileImage'] = downloadUrl;
+        }
+      }
 
       // Update or merge work experiences
       List<Map<String, dynamic>> workExperiences = [];
@@ -278,7 +337,6 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       }
       userData['workExperiences'] = workExperiences;
 
-      // Update or merge educational attainments
       List<Map<String, dynamic>> educationalAttainments = [];
       for (Widget widget in educationalAttainmentWidgets) {
         TextFormField levelField =
@@ -293,13 +351,18 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       }
       userData['educationalAttainments'] = educationalAttainments;
 
-      // Update Firestore with merged data
+      if (_imageFile != null) {
+        final downloadUrl = await _uploadImageToFirebase(uid);
+        if (downloadUrl != null) {
+          userData['profileImage'] = downloadUrl;
+        }
+      }
+
       await FirebaseFirestore.instance
           .collection('jobseeker')
           .doc(userEmail)
-          .set(userData); // Use set to overwrite existing data
+          .set(userData);
 
-      // Update profileCompleted status if criteria are met
       bool isProfileComplete = checkProfileCompletion();
       if (isProfileComplete) {
         await FirebaseFirestore.instance
@@ -309,7 +372,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
           'profileCompleted': true,
         });
       }
-      // Refresh the UI after saving
+
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -323,25 +386,54 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Job Seeker Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () async {
-              await updateProfile();
-              fetchUserProfile();
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        appBar: AppBar(
+          title: Text('Job Seeker Profile'),
+          actions: [
+            IconButton(
+              icon: Icon(
+                Icons.save,
+                color: Colors.white,
+              ),
+              onPressed: () async {
+                await updateProfile();
+                fetchUserProfile();
+              },
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Profile Details', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 20),
+              Stack(
+                alignment: Alignment.bottomLeft,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.all(
+                        color: Colors.grey,
+                        width: 2.0,
+                      ),
+                    ),
+                    child: _imageFile != null
+                        ? Image.file(_imageFile!, fit: BoxFit.cover)
+                        : profileImageUrl != null && profileImageUrl!.isNotEmpty
+                            ? Image.network(profileImageUrl!, fit: BoxFit.cover)
+                            : Icon(Icons.person, size: 80, color: Colors.grey),
+                  ),
+                  IconButton(
+                    onPressed: _pickImage,
+                    icon: Icon(Icons.camera_alt),
+                    color: Colors.blue,
+                  ),
+                ],
+              ),
               TextFormField(
                 controller: _firstNameController,
                 decoration: InputDecoration(labelText: 'First Name'),
@@ -364,6 +456,10 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                 controller: _birthdayController,
                 decoration: InputDecoration(labelText: 'Birthday'),
                 keyboardType: TextInputType.datetime,
+              ),
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(labelText: 'Address'),
               ),
               SizedBox(height: 20),
               Column(
@@ -441,19 +537,16 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                   ),
                 ],
               ),
-            ],
+            ]),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   void _showSkillsDialog(BuildContext context) async {
     print('Fetching skills...'); // Indicate the start of skill fetching
 
     try {
-      List<String> skillsList =
-          await fetchSkills(); // Call fetchSkills directly
+      List<String> skillsList = await fetchSkills();
 
       print('Retrieved skills:');
       skillsList.forEach((skill) {
@@ -513,7 +606,6 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       }
     } catch (error) {
       print('Error fetching skills: $error');
-      // Handle error here according to your app's logic
     }
   }
 }

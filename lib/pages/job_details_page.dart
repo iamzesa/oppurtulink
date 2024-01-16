@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'employer_details.dart';
+
 class JobDetailsScreen extends StatefulWidget {
   final String jobId;
 
@@ -12,13 +14,12 @@ class JobDetailsScreen extends StatefulWidget {
 }
 
 class _JobDetailsScreenState extends State<JobDetailsScreen> {
-  @override
+  bool _isChecked = false;
+
   void initState() {
     super.initState();
     print('Job ID: ${widget.jobId}');
   }
-
-  bool _isChecked = false;
 
   void _submitApplication() {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
@@ -30,11 +31,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           .get()
           .then((docSnapshot) {
         if (docSnapshot.exists) {
-          // Submit the job seeker's profile to the employer
           FirebaseFirestore.instance.collection('jobApplications').add({
-            // Use .add to auto-generate a unique document ID
             'applicantId': userEmail,
-            'jobId': widget.jobId, // Include the jobId in the application
+            'jobId': widget.jobId,
             'profileData': docSnapshot.data(),
             'submittedAt': DateTime.now(),
             'status': 'Pending',
@@ -50,6 +49,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                 ),
               ),
             );
+            Navigator.of(context).pop();
           }).catchError((error) {
             print('Error submitting application: $error');
           });
@@ -89,87 +89,165 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             return Center(child: Text('Job not found'));
           }
 
-          final postedDate = (jobData['datePosted'] as Timestamp?)?.toDate();
-          final daysAgo =
-              postedDate != null ? _calculateDaysAgo(postedDate) : 0;
+          String employerEmail = jobData['employer'];
+          return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            future: FirebaseFirestore.instance
+                .collection('employer')
+                .doc(employerEmail)
+                .get(),
+            builder: (context, employerSnapshot) {
+              if (employerSnapshot.connectionState == ConnectionState.waiting ||
+                  !employerSnapshot.hasData) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-          return ListView(
-            padding: EdgeInsets.all(16.0),
-            children: [
-              ListTile(
-                title: Text(
-                  jobData['jobTitle'] ?? 'Job Title Not Available',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '${jobData['companyName'] ?? 'Company Name Not Available'} - $daysAgo days ago',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Job Details:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(jobData['jobDetails'] ?? 'Job Details Not Available'),
-              SizedBox(height: 20),
-              Text(
-                'Job Skills:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var skill in jobData['jobSkills'] ?? [])
-                    Text('• $skill'),
-                ],
-              ),
-              SizedBox(height: 20),
+              final employerData = employerSnapshot.data!.data();
 
-              Text(
-                'Job Requirements:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var requirement in jobData['requirements'] ?? [])
-                    Text('• $requirement'),
-                ],
-              ),
-              SizedBox(height: 20),
-              // Add your "Apply Now" button and checkbox here
+              if (employerData == null) {
+                return Center(child: Text('Employer not found'));
+              }
 
-              ElevatedButton(
-                onPressed: _isChecked ? _submitApplication : null,
-                child: Text('Apply Now'),
-              ),
-              SizedBox(height: 10),
-              Row(
+              final companyName = employerData['companyName'];
+              final aboutCompany = employerData['aboutCompany'];
+
+              final postedDate =
+                  (jobData['datePosted'] as Timestamp?)?.toDate();
+              final daysAgo =
+                  postedDate != null ? _calculateDaysAgo(postedDate) : 0;
+
+              return ListView(
+                padding: EdgeInsets.all(16.0),
                 children: [
-                  Checkbox(
-                    value: _isChecked,
-                    onChanged: (value) {
-                      setState(() {
-                        _isChecked = value ?? false;
-                      });
-                    },
+                  SizedBox(height: 8),
+                  // Text(
+                  //   'Job Title: ${jobData['jobTitle'] ?? 'Not Available'}',
+                  //   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  // ),
+                  // SizedBox(height: 8),
+                  // Text(
+                  //   'Company: ${companyName ?? 'Not Available'}',
+                  //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // ),
+                  // SizedBox(height: 8),
+                  // Text(
+                  //   'About the Company: ${aboutCompany ?? 'Not Available'}',
+                  //   style: TextStyle(fontSize: 12),
+                  // ),
+                  ListTile(
+                    title: Text(
+                      'Job Title: ${jobData['jobTitle'] ?? 'Not Available'}',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      'Company: ${companyName ?? 'Not Available'}',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EmployerDetailsPage(
+                              employerEmail: jobData['employer'],
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      child: Text('Employer Details'),
+                    ),
                   ),
+
                   Text(
-                      'I agree to send my profile details to apply on the job'),
+                    'Salary: ${jobData['salary'] ?? 'Not Available'}',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Posted: $daysAgo days ago',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  // SizedBox(height: 8),
+                  // Container(
+                  //   width: 50,
+                  //   child: ElevatedButton(
+                  //     onPressed: () {},
+                  //     child: Text('View Employer Details'),
+                  //   ),
+                  // ),
+                  SizedBox(height: 8),
+                  Divider(
+                    height: 1,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Job Details:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(jobData['jobDetails'] ?? 'Job Details Not Available'),
+                  SizedBox(height: 8),
+                  Text(
+                    'Job Skills:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var skill in jobData['jobSkills'] ?? [])
+                        Text('• $skill'),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Job Requirements:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var requirement in jobData['requirements'] ?? [])
+                        Text('• $requirement'),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _isChecked ? _submitApplication : null,
+                    child: Text('Apply Now'),
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _isChecked,
+                        onChanged: (value) {
+                          setState(() {
+                            _isChecked = value ?? false;
+                          });
+                        },
+                      ),
+                      Text(
+                          'I agree to send my profile details to apply on the job'),
+                    ],
+                  ),
                 ],
-              ),
-            ],
+              );
+            },
           );
         },
       ),
     );
   }
 
-  // Function to calculate days ago
   int _calculateDaysAgo(DateTime postedDate) {
     final currentDate = DateTime.now();
     final difference = currentDate.difference(postedDate);

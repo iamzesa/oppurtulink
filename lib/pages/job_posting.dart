@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/single_child_widget.dart';
 
 class PostJobPage extends StatefulWidget {
   @override
@@ -119,46 +120,121 @@ class _PostJobPageState extends State<PostJobPage> {
   }
 
   void _addSkillDialog() {
-    String newSkill = ''; // To store the entered skill
+    List<String> allSkills = [];
+    String newSkill = '';
+    String searchInput = ''; // Added variable to store search input
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add Skill'),
-          content: TextField(
-            onChanged: (value) {
-              newSkill = value; // Update newSkill when text changes
-            },
-            decoration: InputDecoration(
-              hintText: 'Enter skill',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog on cancel
+    // Fetch all skills from Firestore
+    FirebaseFirestore.instance.collection('skills').get().then((querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        if (doc.exists) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          if (data.containsKey('skill_name')) {
+            allSkills.add(data['skill_name']);
+          }
+        }
+      });
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Choose or Add Skill'),
+            content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                // Filter skills based on search input
+                List<String> filteredSkills = allSkills
+                    .where((skill) =>
+                        skill.toLowerCase().contains(searchInput.toLowerCase()))
+                    .toList();
+
+                return SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Section 1: Enter new skill
+                      TextField(
+                        onChanged: (value) {
+                          newSkill = value;
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Enter new skill',
+                        ),
+                      ),
+                      SizedBox(height: 10),
+
+                      // Section 2: Search skills (added search bar)
+                      TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            searchInput = value; // Update search input
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search skills',
+                        ),
+                      ),
+
+                      // Section 3: Existing skills with checkboxes
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        children: filteredSkills.map((skill) {
+                          bool isSelected = _jobSkills.contains(skill);
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: isSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    if (value != null) {
+                                      if (value) {
+                                        _jobSkills.add(skill);
+                                      } else {
+                                        _jobSkills.remove(skill);
+                                      }
+                                    }
+                                  });
+                                },
+                              ),
+                              Text(skill),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                );
               },
-              child: Text('Cancel'),
             ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  if (!_jobSkills.contains(newSkill)) {
-                    _jobSkills.add(newSkill);
-                  } else {
-                    print('Skill $newSkill already exists in _jobSkills');
-                  }
-                });
-                _saveSkillToFirestore(newSkill); // Save skill to Firestore
-                Navigator.of(context).pop(); // Close dialog on confirm
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    if (newSkill.isNotEmpty && !_jobSkills.contains(newSkill)) {
+                      _jobSkills.add(newSkill);
+                    }
+                  });
+                  _saveSkillToFirestore(newSkill);
+                  Navigator.of(context).pop();
+                },
+                child: Text('Add'),
+              ),
+            ],
+          );
+        },
+      );
+    }).catchError((error) {
+      print('Error fetching skills from Firestore: $error');
+    });
   }
 
   void _saveSkillToFirestore(String skillName) {

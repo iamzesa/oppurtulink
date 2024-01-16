@@ -353,49 +353,47 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
                 // google sign in buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Google button
-                    SquareTile(
-                      onTap: areTermsAccepted
-                          ? () {
-                              final authService = AuthService();
-                              final role =
-                                  Provider.of<UserRole>(context, listen: false)
-                                      .role;
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     // Google button
+                //     SquareTile(
+                //       onTap: areTermsAccepted
+                //           ? () {
+                //               final authService = AuthService();
+                //               final role =
+                //                   Provider.of<UserRole>(context, listen: false)
+                //                       .role;
 
-                              if (role != null) {
-                                authService.signInWithGoogle(role);
-                              } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('Role Not Selected'),
-                                      content: const Text(
-                                        'Please select a role (jobseeker or employer) before signing up with Google.',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              }
-                            }
-                          : null,
-                      imagePath: 'lib/images/google.png',
-                    ),
-                  ],
-                ),
+                //               if (role != null) {
+                //                 authService.signInWithGoogle(role);
+                //               } else {
+                //                 showDialog(
+                //                   context: context,
+                //                   builder: (context) {
+                //                     return AlertDialog(
+                //                       title: const Text('Role Not Selected'),
+                //                       content: const Text(
+                //                         'Please select a role (jobseeker or employer) before signing up with Google.',
+                //                       ),
+                //                       actions: [
+                //                         TextButton(
+                //                           onPressed: () =>
+                //                               Navigator.pop(context),
+                //                           child: const Text('OK'),
+                //                         ),
+                //                       ],
+                //                     );
+                //                   },
+                //                 );
+                //               }
+                //             }
+                //           : null,
+                //       imagePath: 'lib/images/google.png',
+                //     ),
+                //   ],
+                // ),
 
                 const SizedBox(height: 20),
 
@@ -421,7 +419,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ],
-                )
+                ),
+                SizedBox(height: 20)
               ],
             ),
           ),

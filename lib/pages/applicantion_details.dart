@@ -5,14 +5,19 @@ import 'package:intl/intl.dart';
 import 'applicant_details.dart';
 import 'edit_job.dart';
 
-class ApplicantListPage extends StatelessWidget {
+class ApplicantListPage extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> job;
 
   const ApplicantListPage({Key? key, required this.job}) : super(key: key);
 
   @override
+  State<ApplicantListPage> createState() => _ApplicantListPageState();
+}
+
+class _ApplicantListPageState extends State<ApplicantListPage> {
+  @override
   Widget build(BuildContext context) {
-    DateTime postedDate = (job['postedDate'] as Timestamp).toDate();
+    DateTime postedDate = (widget.job['postedDate'] as Timestamp).toDate();
     String formattedDate = DateFormat.yMMMMd().add_jm().format(postedDate);
 
     return Scaffold(
@@ -30,7 +35,7 @@ class ApplicantListPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Text(
-                    '${job['jobTitle']}',
+                    '${widget.job['jobTitle']}',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -39,9 +44,14 @@ class ApplicantListPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditJobDetailsPage(job: job),
+                        builder: (context) =>
+                            EditJobDetailsPage(job: widget.job),
                       ),
-                    );
+                    ).then((result) {
+                      if (result == true) {
+                        setState(() {});
+                      }
+                    });
                   },
                   child: Text('Edit Details'),
                 ),
@@ -50,35 +60,35 @@ class ApplicantListPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                'Company Name: ${job['companyName']}',
+                'Company Name: ${widget.job['companyName']}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                'Employer: ${job['employer']}',
+                'Employer: ${widget.job['employer']}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                'Details: ${job['jobDetails']}',
+                'Details: ${widget.job['jobDetails']}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                'SkillS Needed: ${job['jobSkills'].join(', ')}',
+                'SkillS Needed: ${widget.job['jobSkills'].join(', ')}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text(
-                'Requirements: ${job['requirements'].join(', ')}',
+                'Requirements: ${widget.job['requirements'].join(', ')}',
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -95,11 +105,11 @@ class ApplicantListPage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Expanded(
-              child: FutureBuilder<QuerySnapshot>(
-                future: FirebaseFirestore.instance
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
                     .collection('jobApplications')
-                    .where('jobId', isEqualTo: job.id)
-                    .get(),
+                    .where('jobId', isEqualTo: widget.job.id)
+                    .snapshots(),
                 builder: (context, applicantSnapshot) {
                   if (applicantSnapshot.connectionState ==
                       ConnectionState.waiting) {

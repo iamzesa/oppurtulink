@@ -18,6 +18,7 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
   List<String> jobSkills = [];
   List<String> requirements = [];
   late TextEditingController jobDetailsController;
+  late TextEditingController salaryController;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
     reqController = TextEditingController();
     jobDetailsController =
         TextEditingController(text: widget.job['jobDetails']);
+    salaryController = TextEditingController(text: widget.job['salary']);
   }
 
   @override
@@ -54,19 +56,18 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
               controller: titleController,
               decoration: InputDecoration(labelText: 'Job Title'),
             ),
-
             TextField(
               controller: companyNameController,
               decoration: InputDecoration(labelText: 'Company Name'),
             ),
-
+            TextField(
+              controller: salaryController,
+              decoration: InputDecoration(labelText: 'Salary'),
+            ),
             TextField(
               controller: jobDetailsController,
               decoration: InputDecoration(labelText: 'Job Details'),
             ),
-
-            // Add more TextFields for other fields
-
             SizedBox(height: 20),
             Text('Job Skills:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -101,7 +102,6 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
                 ),
               ],
             ),
-
             SizedBox(height: 20),
             Text('Requirements:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -136,11 +136,19 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
                 ),
               ],
             ),
-
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                _saveChanges();
+              onPressed: () async {
+                bool success = await _saveChanges();
+                print('Save Changes Result: $success');
+                if (success) {
+                  setState(() {
+                    print('Triggering a rebuild in ApplicantListPage');
+                  });
+                  Navigator.of(context)
+                      .pop(true); // Pass true to indicate success
+                  print('Navigating back to ApplicantListPage');
+                }
               },
               child: Text('Save'),
             ),
@@ -150,26 +158,27 @@ class _EditJobDetailsPageState extends State<EditJobDetailsPage> {
     );
   }
 
-  void _saveChanges() {
-    // Update Firestore document with the new values
-    widget.job.reference.update({
-      'jobTitle': titleController.text,
-      'companyName': companyNameController.text,
-      'jobDetails': jobDetailsController.text, // Add jobDetails field
-      'jobSkills': jobSkills,
-      'requirements': requirements,
-      // Add other fields to update in a similar manner
-    }).then((value) {
+  Future<bool> _saveChanges() async {
+    try {
+      await widget.job.reference.update({
+        'jobTitle': titleController.text,
+        'companyName': companyNameController.text,
+        'jobDetails': jobDetailsController.text,
+        'jobSkills': jobSkills,
+        'requirements': requirements,
+        'salary': salaryController.text,
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Job updated successfully')),
       );
-      Navigator.of(context).pop(); // Navigate back after updating
-    }).catchError((error) {
-      // Handle error if update fails
+      return true; // Indicate success
+    } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update job: $error')),
       );
       print('Failed to update job: $error');
-    });
+      return false; // Indicate failure
+    }
   }
 }

@@ -19,6 +19,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController contactNumberController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController positionController = TextEditingController();
+  final TextEditingController aboutCompanyController = TextEditingController();
+
   File? _imageFile;
   bool _isLoading = false;
   late String _imageUrl = '';
@@ -27,6 +29,70 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     _fetchUserData();
+  }
+
+  Future<void> _updateProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      String userEmail = firebaseUser.email ?? '';
+      String firstName = firstNameController.text;
+      String lastName = lastNameController.text;
+      String companyName = companyNameController.text;
+      String email = emailController.text;
+      String contactNumber = contactNumberController.text;
+      String position = positionController.text;
+      String aboutCompany = aboutCompanyController.text;
+
+      CollectionReference employerCollection =
+          FirebaseFirestore.instance.collection('employer');
+
+      String imageUrl = _imageUrl;
+
+      if (_imageFile != null) {
+        imageUrl = await _uploadImage();
+      }
+
+      // Update the document with the user's email as the document ID
+      try {
+        await employerCollection.doc(userEmail).update({
+          'firstName': firstName,
+          'lastName': lastName,
+          'companyName': companyName,
+          'email': email,
+          'contactNumber': contactNumber,
+          'position': position,
+          'userImage': imageUrl,
+          'aboutCompany': aboutCompany,
+        });
+
+        // Fetch updated data after successful update
+        await _fetchUserData();
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        Navigator.pop(context, {
+          'firstName': firstName,
+          'lastName': lastName,
+          'companyName': companyName,
+          'email': email,
+          'position': position,
+          'userImage': imageUrl,
+          'contactNumber': contactNumber,
+          'aboutCompany': aboutCompany,
+        });
+      } catch (e) {
+        print('Error updating profile: $e');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _fetchUserData() async {
@@ -46,59 +112,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           contactNumberController.text = employerData['contactNumber'] ?? '';
           emailController.text = employerData['email'] ?? '';
           positionController.text = employerData['position'] ?? '';
+          aboutCompanyController.text = employerData['aboutCompany'] ?? '';
           _imageUrl = employerData['userImage'] ?? '';
         });
       }
-    }
-  }
-
-  Future<void> _updateProfile() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser != null) {
-      String userEmail = firebaseUser.email ?? '';
-      String firstName = firstNameController.text;
-      String lastName = lastNameController.text;
-      String companyName = companyNameController.text;
-      String email = emailController.text;
-      String contactNumber = contactNumberController.text;
-      String position = positionController.text;
-
-      CollectionReference employerCollection =
-          FirebaseFirestore.instance.collection('employer');
-
-      String imageUrl = _imageUrl;
-
-      if (_imageFile != null) {
-        imageUrl = await _uploadImage();
-      }
-
-      await employerCollection.doc(userEmail).set({
-        'firstName': firstName,
-        'lastName': lastName,
-        'companyName': companyName,
-        'email': email,
-        'contactNumber': contactNumber,
-        'position': position,
-        'userImage': imageUrl,
-      });
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      Navigator.pop(context, {
-        'firstName': firstName,
-        'lastName': lastName,
-        'companyName': companyName,
-        'email': email,
-        'position': position,
-        'userImage': imageUrl,
-        'contactNumber': contactNumber,
-      });
     }
   }
 
@@ -154,8 +171,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      height: 200,
-                      width: 200,
+                      height: 150,
+                      width: 150,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.black),
@@ -219,6 +236,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
               decoration: InputDecoration(
                 labelText: 'Position',
                 hintText: 'Enter your position',
+              ),
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: aboutCompanyController,
+              decoration: InputDecoration(
+                labelText: 'About Company',
+                hintText: 'Add Company Details',
               ),
             ),
             TextFormField(

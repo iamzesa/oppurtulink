@@ -85,41 +85,66 @@ class JobSeekerActivityPage extends StatelessWidget {
 
                         final jobTitle =
                             jobData['jobTitle'] ?? 'Job Title Not Available';
-                        final companyName =
-                            jobData['companyName'] ?? 'Company Not Available';
 
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8.0),
-                            color: Colors.grey[200], // Background color
-                          ),
-                          margin: const EdgeInsets.all(8.0),
-                          padding: const EdgeInsets.all(8.0),
-                          child: ListTile(
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  jobTitle,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
+                        // Fetch company details
+                        return FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('employer')
+                              .doc(jobData['employer'])
+                              .get(),
+                          builder: (context, companySnapshot) {
+                            if (companySnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return SizedBox();
+                            }
+
+                            if (!companySnapshot.hasData ||
+                                !companySnapshot.data!.exists) {
+                              return SizedBox();
+                            }
+
+                            final companyData = companySnapshot.data!.data()
+                                as Map<String, dynamic>;
+                            final companyName = companyData['companyName'] ??
+                                'Company Not Available';
+                            final aboutCompany = companyData['aboutCompany'] ??
+                                'About Not Available';
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.0),
+                                color: Colors.grey[200], // Background color
+                              ),
+                              margin: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(8.0),
+                              child: ListTile(
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      jobTitle,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      companyName,
+                                    ),
+                                    Text('Applied $daysAgo days ago'),
+                                  ],
                                 ),
-                                SizedBox(height: 4),
-                                Text(
-                                  companyName,
+                                trailing: ElevatedButton(
+                                  onPressed: () {
+                                    viewApplicationStatus(
+                                        context, application, aboutCompany);
+                                  },
+                                  child: Text('View Details'),
                                 ),
-                                Text('Applied $daysAgo days ago'),
-                              ],
-                            ),
-                            trailing: ElevatedButton(
-                              onPressed: () {
-                                viewApplicationStatus(context, application);
-                              },
-                              child: Text('View Details'),
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         );
                       },
                     );
@@ -133,8 +158,8 @@ class JobSeekerActivityPage extends StatelessWidget {
     );
   }
 
-  void viewApplicationStatus(
-      BuildContext context, Map<String, dynamic> application) {
+  void viewApplicationStatus(BuildContext context,
+      Map<String, dynamic> application, String aboutCompany) {
     final jobId = application['jobId'] as String?;
     if (jobId == null) {
       // Handle the case where jobId is null
@@ -172,6 +197,8 @@ class JobSeekerActivityPage extends StatelessWidget {
                   Text('Job Title: $jobTitle'),
                   SizedBox(height: 8),
                   Text('Company: $companyName'),
+                  SizedBox(height: 8),
+                  Text('About: $aboutCompany'),
                   SizedBox(height: 8),
                   Text('Job Details: $jobDetails'),
                   SizedBox(height: 8),

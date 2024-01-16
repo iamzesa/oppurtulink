@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,13 @@ class JobSeekerHomePage extends StatefulWidget {
 class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
   List<String> jobSeekerSkills = [];
   String welcomeMessage = '';
+  List<DocumentSnapshot> recentJobDocs = [];
+  List<DocumentSnapshot> allJobs = [];
+
+  final TextEditingController _searchController = TextEditingController();
+
+  late final StreamController<List<DocumentSnapshot>> _filteredJobsController =
+      StreamController<List<DocumentSnapshot>>();
 
   void signUserOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
@@ -26,6 +35,60 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
   void initState() {
     super.initState();
     fetchJobSeekerData();
+    fetchAllJobs();
+  }
+
+  @override
+  void dispose() {
+    _filteredJobsController.close();
+    super.dispose();
+  }
+
+  Future<void> fetchAllJobs() async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('jobs').get();
+      if (snapshot.docs.isNotEmpty) {
+        allJobs = snapshot.docs;
+        _filteredJobsController.add(allJobs);
+      }
+    } catch (error) {
+      print('Error fetching all jobs: $error');
+    }
+  }
+
+  void _filterJobs(String query) {
+    if (allJobs.isEmpty) {
+      print('All jobs is empty. Fetching jobs...');
+      fetchAllJobs().then((_) {
+        _applyJobFilter(query);
+      });
+    } else {
+      _applyJobFilter(query);
+    }
+  }
+
+  void _applyJobFilter(String query) {
+    if (query.isNotEmpty) {
+      final List<DocumentSnapshot> filteredJobs = allJobs.where((jobDoc) {
+        final jobTitle = jobDoc['jobTitle'] as String? ?? '';
+        final companyName = jobDoc['companyName'] as String? ?? '';
+        final jobSkills = List<String>.from(jobDoc['jobSkills'] ?? []);
+
+        return jobTitle.toLowerCase().contains(query.toLowerCase()) ||
+            companyName.toLowerCase().contains(query.toLowerCase()) ||
+            jobSkills.any(
+                (skill) => skill.toLowerCase().contains(query.toLowerCase()));
+      }).toList();
+
+      _filteredJobsController.add(filteredJobs);
+
+      print('Filtered Jobs: $filteredJobs');
+    } else {
+      _filteredJobsController.add(allJobs);
+
+      print('All Jobs: $allJobs');
+    }
   }
 
   Future<void> fetchJobSeekerData() async {
@@ -107,9 +170,11 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
             ),
           ),
           // Job search bar
-          const Padding(
-            padding: EdgeInsets.all(8.0),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: TextField(
+              controller: _searchController,
+              onChanged: (query) => _filterJobs(query),
               decoration: InputDecoration(
                 hintText: 'Search for jobs...',
                 border: OutlineInputBorder(),
@@ -117,7 +182,7 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
               ),
             ),
           ),
-          // Recommended jobs section
+
           _buildRecommendedJobs(context),
           _buildRecentJobs(context),
         ],
@@ -136,24 +201,24 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
           return Text('Error: ${snapshot.error}');
         }
 
-        if (jobSeekerSkills.isEmpty) {
-          print('Job Seeker Skills: Empty');
-          return const Text('No job seeker skills available.');
-        } else {
-          print('Job Seeker Skills: $jobSeekerSkills');
-        }
+        // if (jobSeekerSkills.isEmpty) {
+        //   print('Job Seeker Skills: Empty');
+        //   return const Text('No job seeker skills available.');
+        // } else {
+        //   print('Job Seeker Skills: $jobSeekerSkills');
+        // }
 
         final jobDocs = snapshot.data?.docs ?? [];
         final recommendedJobs = jobDocs.where((jobDoc) {
           final jobSkills = List<String>.from(jobDoc['jobSkills'] ?? []);
           if (jobSkills.isEmpty || jobSeekerSkills.isEmpty) return false;
 
-          print('Job Skills: $jobSkills');
+          // print('Job Skills: $jobSkills');
 
           final matchingSkills = jobSkills
               .where((skill) => jobSeekerSkills.contains(skill))
               .toList();
-          print('Matching Skills: $matchingSkills');
+          // print('Matching Skills: $matchingSkills');
 
           return matchingSkills.isNotEmpty;
         }).toList();
@@ -232,72 +297,85 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
   }
 
   Widget _buildRecentJobs(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              'Recent Job Listings',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                'Recent Job Listings',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('jobs').snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              }
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-              final jobDocs = snapshot.data?.docs ?? [];
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: jobDocs.length,
-                itemBuilder: (context, index) {
-                  final job = jobDocs[index];
-                  final jobId = job.id; // This retrieves the actual document ID
-                  final jobData = job.data() as Map<String, dynamic>;
+            Expanded(
+              child: StreamBuilder<List<DocumentSnapshot>>(
+                stream: _filteredJobsController.stream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                      ),
+                    );
+                  }
 
-                  final postedDate =
-                      (jobData['postedDate'] as Timestamp).toDate();
-                  final daysAgo = _calculateDaysAgo(postedDate);
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                      color: Colors.grey[200], // Background color
-                    ),
-                    margin: const EdgeInsets.all(8.0),
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      title: Text(jobData['jobTitle']),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(jobData['companyName']),
-                          Text('$daysAgo days ago'),
-                        ],
-                      ),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/jobDetails',
-                              arguments: jobId);
-                        },
-                        child: const Text('View'),
-                      ),
-                    ),
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+
+                  final filteredJobs = snapshot.data ?? [];
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredJobs.length,
+                    itemBuilder: (context, index) {
+                      final job = filteredJobs[index];
+                      final jobId = job.id;
+                      final jobData = job.data() as Map<String, dynamic>;
+
+                      final postedDate =
+                          (jobData['postedDate'] as Timestamp).toDate();
+                      final daysAgo = _calculateDaysAgo(postedDate);
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          color: Colors.grey[200],
+                        ),
+                        margin: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text(jobData['jobTitle']),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(jobData['companyName']),
+                              Text('$daysAgo days ago'),
+                            ],
+                          ),
+                          trailing: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/jobDetails',
+                                  arguments: jobId);
+                            },
+                            child: const Text('View'),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
