@@ -19,6 +19,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   late TextEditingController _ageController;
   late TextEditingController _birthdayController;
   late TextEditingController _addressController;
+  late TextEditingController skillsController;
 
   List<Widget> workExperienceWidgets = [];
   List<Widget> educationalAttainmentWidgets = [];
@@ -44,6 +45,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
     _ageController = TextEditingController();
     _birthdayController = TextEditingController();
     _addressController = TextEditingController();
+    skillsController = TextEditingController();
 
     fetchUserProfile();
   }
@@ -461,23 +463,14 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                 controller: _addressController,
                 decoration: InputDecoration(labelText: 'Address'),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('Skills', style: TextStyle(fontSize: 18)),
-                      SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _showSkillsDialog(context);
-                        },
-                        child: Text('Add'),
-                      ),
-                    ],
+                  Text(
+                    'My Skills',
+                    style: TextStyle(fontSize: 16),
                   ),
-                  // Display selected skills here or any other UI representation
                   Wrap(
                     children: selectedSkills.map((skill) {
                       return Chip(
@@ -489,6 +482,39 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                         },
                       );
                     }).toList(),
+                  ),
+                  TextFormField(
+                    controller: skillsController,
+                    decoration: InputDecoration(labelText: 'Enter Skill'),
+                  ),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          String newSkill = skillsController.text.trim();
+                          if (newSkill.isNotEmpty) {
+                            setState(() {
+                              selectedSkills.add(newSkill);
+                              skillsController.clear();
+                              updateJobSeekerSkills(selectedSkills);
+                            });
+                          }
+                        },
+                        child: Text('Add Skill'),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _showSkillsDialog(context);
+                        },
+                        child: Text('Add from Existing Skills'),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 10,
                   ),
                 ],
               ),
