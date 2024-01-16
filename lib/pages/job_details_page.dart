@@ -135,7 +135,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   // ),
                   ListTile(
                     title: Text(
-                      'Job Title: ${jobData['jobTitle'] ?? 'Not Available'}',
+                      '${jobData['jobTitle'] ?? 'Not Available'}',
                       style:
                           TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
