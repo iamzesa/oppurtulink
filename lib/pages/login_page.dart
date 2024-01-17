@@ -57,7 +57,6 @@ class _LoginPageState extends State<LoginPage> {
 
       navigateToHomePage(context, role, userId);
     } on FirebaseAuthException catch (e) {
-      // If the Firebase sign-in fails, display the appropriate error message
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
         showErrorMessage('Invalid email or password');
       } else {
@@ -68,59 +67,12 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<bool> doesUserExistForRole(String role, String email) async {
     try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection(role) // Use the selected role to access the collection
-          .doc(email) // Assume document ID is the email address
-          .get();
+      final userDoc =
+          await FirebaseFirestore.instance.collection(role).doc(email).get();
 
       return userDoc.exists;
     } catch (e) {
       return false;
-    }
-  }
-
-  void forgotPassword() async {
-    String email = emailController.text;
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Password Reset'),
-            content: Text('A password reset email has been sent to $email.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      print('Error sending password reset email: $e');
-      // Show an error message to the user
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content:
-                Text('Failed to send password reset email. Please try again.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
     }
   }
 
@@ -279,7 +231,9 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: forgotPassword,
+                        onPressed: (() {
+                          Navigator.pushNamed(context, '/forgotPassword');
+                        }),
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(color: Colors.grey[600]),
@@ -326,84 +280,88 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 10),
 
                 // or continue with
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //       Padding(
-                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                //         child: Text(
-                //           'Or Sign In With',
-                //           style: TextStyle(color: Colors.grey[700]),
-                //         ),
-                //       ),
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Text(
+                          'Or Sign In With',
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
                 // google sign in buttons
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     // Google button
-                //     SquareTile(
-                //       onTap: areTermsAccepted
-                //           ? () {
-                //               final authService = AuthService();
-                //               final role =
-                //                   Provider.of<UserRole>(context, listen: false)
-                //                       .role;
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Google button
+                    SquareTile(
+                      onTap: areTermsAccepted
+                          ? () {
+                              final authService = AuthService();
+                              final role =
+                                  Provider.of<UserRole>(context, listen: false)
+                                      .role;
 
-                //               if (role != null) {
-                //                 authService.signInWithGoogle(role);
-                //               } else {
-                //                 showDialog(
-                //                   context: context,
-                //                   builder: (context) {
-                //                     return AlertDialog(
-                //                       title: const Text('Role Not Selected'),
-                //                       content: const Text(
-                //                         'Please select a role (jobseeker or employer) before signing up with Google.',
-                //                       ),
-                //                       actions: [
-                //                         TextButton(
-                //                           onPressed: () =>
-                //                               Navigator.pop(context),
-                //                           child: const Text('OK'),
-                //                         ),
-                //                       ],
-                //                     );
-                //                   },
-                //                 );
-                //               }
-                //             }
-                //           : null,
-                //       imagePath: 'lib/images/google.png',
-                //     ),
-                //   ],
-                // ),
+                              if (role != null) {
+                                authService.signInWithGoogle(role);
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Role Not Selected'),
+                                      content: const Text(
+                                        'Please select a role (jobseeker or employer) before signing up with Google.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            }
+                          : null,
+                      imagePath: 'lib/images/google.png',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
                 // not a member? register now
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const SizedBox(width: 10),
                     Text(
                       'Don\'t have an account?',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 10),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, '/signup');

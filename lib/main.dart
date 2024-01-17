@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:oppurtulink/pages/auth_page.dart';
 import 'package:oppurtulink/pages/employer_activity_page.dart';
+import 'package:oppurtulink/pages/forgot_password.dart';
 import 'package:oppurtulink/pages/job_details_page.dart';
 import 'package:oppurtulink/pages/job_posting.dart';
+import 'package:oppurtulink/pages/posted_jobs.dart';
 import 'package:oppurtulink/user_role.dart'; // Import the user_role.dart file
 import 'firebase_options.dart';
 import 'pages/signup_page.dart';
@@ -46,6 +48,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const AuthPage(),
         '/signup': (context) => const SignupPage(),
+        '/forgotPassword': (context) => ForgotPasswordPage(),
         '/jobDetails': (context) {
           final String jobId =
               ModalRoute.of(context)!.settings.arguments as String;
@@ -53,6 +56,7 @@ class MyApp extends StatelessWidget {
         },
         '/jobPosting': (context) => PostJobPage(),
         '/jobsList': (context) => EmployerActivityPage(),
+        '/postedJobs': (context) => PostedJobsPage()
       },
     );
   }

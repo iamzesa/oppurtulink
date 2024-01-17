@@ -39,22 +39,22 @@ class _ApplicantListPageState extends State<ApplicantListPage> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditJobDetailsPage(job: widget.job),
-                      ),
-                    ).then((result) {
-                      if (result == true) {
-                        setState(() {});
-                      }
-                    });
-                  },
-                  child: Text('Edit Details'),
-                ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) =>
+                //             EditJobDetailsPage(job: widget.job),
+                //       ),
+                //     ).then((result) {
+                //       if (result == true) {
+                //         setState(() {});
+                //       }
+                //     });
+                //   },
+                //   child: Text('Edit Details'),
+                // ),
               ],
             ),
             Padding(

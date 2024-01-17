@@ -346,82 +346,82 @@ class _SignupPageState extends State<SignupPage> {
                   ],
                 ),
 
-                // const SizedBox(height: 50),
+                const SizedBox(height: 50),
                 // or continue with
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //       Padding(
-                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                //         child: Text(
-                //           'Or continue with',
-                //           style: TextStyle(color: Colors.grey[700]),
-                //         ),
-                //       ),
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Text(
+                          'Or continue with',
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 20),
 
                 // google sign up buttons
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     // Google button for sign-up
-                //     SquareTile(
-                //       onTap: areTermsAccepted
-                //           ? () async {
-                //               final authService =
-                //                   AuthService(); // Create an instance of AuthService
-                //               final role =
-                //                   Provider.of<UserRole>(context, listen: false)
-                //                       .role;
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Google button for sign-up
+                    SquareTile(
+                      onTap: areTermsAccepted
+                          ? () async {
+                              final authService =
+                                  AuthService(); // Create an instance of AuthService
+                              final role =
+                                  Provider.of<UserRole>(context, listen: false)
+                                      .role;
 
-                //               if (role == null || role.isEmpty) {
-                //                 // Show an error dialog if the role is not selected
-                //                 showDialog(
-                //                   context: context,
-                //                   builder: (context) {
-                //                     return AlertDialog(
-                //                       title: const Text('Role Not Selected'),
-                //                       content: const Text(
-                //                         'Please select a role (jobseeker or employer) before signing up with Google.',
-                //                       ),
-                //                       actions: [
-                //                         TextButton(
-                //                           onPressed: () =>
-                //                               Navigator.pop(context),
-                //                           child: const Text('OK'),
-                //                         ),
-                //                       ],
-                //                     );
-                //                   },
-                //                 );
-                //               } else {
-                //                 print('Role from SquareTile 04/04 $role');
-                //                 authService.signUpWithGoogle(role);
-                //               }
-                //             }
-                //           : null,
-                //       imagePath: 'lib/images/google.png',
-                //     ),
-                //     SizedBox(height: 20)
-                //   ],
-                // ),
+                              if (role == null || role.isEmpty) {
+                                // Show an error dialog if the role is not selected
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Role Not Selected'),
+                                      content: const Text(
+                                        'Please select a role (jobseeker or employer) before signing up with Google.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              } else {
+                                print('Role from SquareTile 04/04 $role');
+                                authService.signUpWithGoogle(role);
+                              }
+                            }
+                          : null,
+                      imagePath: 'lib/images/google.png',
+                    ),
+                    SizedBox(height: 20)
+                  ],
+                ),
 
                 SizedBox(height: 20)
               ],

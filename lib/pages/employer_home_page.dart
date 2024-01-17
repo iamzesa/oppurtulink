@@ -43,8 +43,8 @@ class EmployerHomePage extends StatelessWidget {
                   height: 150,
                 ),
                 Container(
-                  width: 100, // Adjust the width as needed
-                  height: 100, // Adjust the height as needed
+                  width: 100,
+                  height: 100,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF061cb0),
@@ -63,9 +63,10 @@ class EmployerHomePage extends StatelessWidget {
                 const SizedBox(height: 20),
                 MyButton(
                   onTap: () {
-                    Navigator.pushNamed(context, '/jobPosting');
+                    // Navigator.pushNamed(context, '/jobPosting');
+                    Navigator.pushNamed(context, '/postedJobs');
                   },
-                  buttonText: "Post Job Vacancies",
+                  buttonText: "Posted Jobs",
                 ),
                 const SizedBox(height: 20),
                 const SizedBox(height: 20),

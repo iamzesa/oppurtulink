@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'applicantion_details.dart';
+import 'job_list_of_applicants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EmployerActivityPage extends StatelessWidget {
@@ -8,7 +8,6 @@ class EmployerActivityPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final FirebaseAuth _auth = FirebaseAuth.instance;
 
-    // Fetch the currently logged-in user
     User? user = _auth.currentUser;
     String? loggedInEmployerEmail;
 
@@ -27,12 +26,11 @@ class EmployerActivityPage extends StatelessWidget {
         children: [
           SizedBox(height: 15),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
-              'Posted Jobs',
+              'Click on the job to view applicants',
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
           ),
@@ -90,27 +88,27 @@ class EmployerActivityPage extends StatelessWidget {
                               ),
                             );
                           },
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              FirebaseFirestore.instance
-                                  .collection('jobs')
-                                  .doc(job.id)
-                                  .delete()
-                                  .then((_) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Job deleted')),
-                                );
-                              }).catchError((error) {
-                                // Handle errors if deletion fails
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Failed to delete job')),
-                                );
-                                print("Failed to delete job: $error");
-                              });
-                            },
-                          ),
+                          // trailing: IconButton(
+                          //   icon: Icon(Icons.delete),
+                          //   onPressed: () {
+                          //     FirebaseFirestore.instance
+                          //         .collection('jobs')
+                          //         .doc(job.id)
+                          //         .delete()
+                          //         .then((_) {
+                          //       ScaffoldMessenger.of(context).showSnackBar(
+                          //         SnackBar(content: Text('Job deleted')),
+                          //       );
+                          //     }).catchError((error) {
+                          //       // Handle errors if deletion fails
+                          //       ScaffoldMessenger.of(context).showSnackBar(
+                          //         SnackBar(
+                          //             content: Text('Failed to delete job')),
+                          //       );
+                          //       print("Failed to delete job: $error");
+                          //     });
+                          //   },
+                          // ),
                         ),
                       ),
                     );
